@@ -1,0 +1,10 @@
+Plugin Name: Add New Users
+Author: Andrew Billits
+
+Files:
+----------------------------------------------------------------------
+add-new-users.php - goes in /wp-content/mu-plugins
+
+Instructions:
+----------------------------------------------------------------------
+1) Place the files in the specified directories
