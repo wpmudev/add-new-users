@@ -134,7 +134,7 @@ class Add_New_Users {
 			PRIMARY KEY  (`add_new_users_ID`)
 		) $charset_collate;";
 
-		maybe_create_table( "{$wpdb->base_prefix}batch_create_queue", $table );
+		maybe_create_table( "{$wpdb->base_prefix}add_new_users_queue", $table );
 	}
 
 	/**
