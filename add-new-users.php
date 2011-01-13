@@ -76,12 +76,10 @@ class Add_New_Users {
 	}
 
 	/**
-	 * PHP5 Constructor
+	 * Update database
 	 *
 	 **/
 	function make_current() {
-		global $wpdb;
-
 		// create global database table
 		$this->global_install();
 
