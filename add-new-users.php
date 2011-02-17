@@ -4,8 +4,7 @@ Plugin Name: Add New Users
 Plugin URI: http://premium.wpmudev.org/project/add-new-users
 Description: Allows you to bulk create new users on a site and add them to a blog, including the facility to set their role and password on the new site.
 Author: Andrew Billits, Ulrich Sossou
-Version: 1.0.3
-Network: true
+Version: 1.0.4
 Text Domain: add_new_users
 Author URI: http://premium.wpmudev.org
 WDP ID: 114
@@ -21,7 +20,7 @@ class Add_New_Users {
 	 * Current version number
 	 *
 	 **/
-	var $current_version = '1.0.3';
+	var $current_version = '1.0.4';
 
 	/**
 	 * For supporters only
@@ -193,13 +192,10 @@ class Add_New_Users {
 	 *
 	 **/
 	function page_output() {
-		global $wpdb, $wp_roles;
+		global $wpdb;
 
-		// only sites admins can access this page content
-		if( !current_user_can( 'manage_options' ) ) {
-			echo '<p>' . __( 'You do not have permission to access this page', 'add_new_users' ) . '</p>';
-			return;
-		}
+		if ( function_exists( 'current_user_can' ) && ! current_user_can( 'manage_options' ) )
+			die( __( 'Cheatin&#8217; uh?' ) );
 
 		// display error message if supporter only
 		if ( !$this->is_supporter() && 'yes' == $this->supporter_only ) {
