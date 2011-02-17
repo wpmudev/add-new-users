@@ -194,9 +194,6 @@ class Add_New_Users {
 	function page_output() {
 		global $wpdb;
 
-		if ( function_exists( 'current_user_can' ) && ! current_user_can( 'manage_options' ) )
-			die( __( 'Cheatin&#8217; uh?' ) );
-
 		// display error message if supporter only
 		if ( !$this->is_supporter() && 'yes' == $this->supporter_only ) {
 			supporter_feature_notice();
