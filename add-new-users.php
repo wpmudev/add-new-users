@@ -4,7 +4,7 @@ Plugin Name: Add New Users
 Plugin URI: http://premium.wpmudev.org/project/add-new-users
 Description: Allows you to bulk create new users on a site and add them to a blog, including the facility to set their role and password on the new site.
 Author: Andrew Billits, Ulrich Sossou
-Version: 1.0.4
+Version: 1.0.5
 Text Domain: add_new_users
 Author URI: http://premium.wpmudev.org
 WDP ID: 114
@@ -20,7 +20,7 @@ class Add_New_Users {
 	 * Current version number
 	 *
 	 **/
-	var $current_version = '1.0.4';
+	var $current_version = '1.0.5';
 
 	/**
 	 * For supporters only
@@ -165,13 +165,27 @@ class Add_New_Users {
 
 		if( count( $users ) > 0 ) {
 			foreach ( $users as $user ) {
-				$user['add_new_users_user_password'] = ( 'empty' !== $user['add_new_users_user_password'] ) ? $user['add_new_users_user_password'] : generate_random_password();
+				$user['add_new_users_user_password'] = ( 'empty' !== $user['add_new_users_user_password'] ) ? $user['add_new_users_user_password'] : wp_generate_password();
 
-				$user_id = wpmu_create_user( $user['add_new_users_user_login'], $user['add_new_users_user_password'], $user['add_new_users_user_email'] );
-				add_user_to_blog( $wpdb->blogid, $user_id, $user['add_new_users_user_role'] );
-				wpmu_welcome_user_notification( $user_id, $user_password, '' );
+				if ( is_multisite() )
+					$user_id = wpmu_create_user( $user['add_new_users_user_login'], $user['add_new_users_user_password'], $user['add_new_users_user_email'] );
+				else
+					$user_id = wp_create_user( $user['add_new_users_user_login'], $user['add_new_users_user_password'], $user['add_new_users_user_email'] );
 
-				$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->base_prefix}add_new_users_queue WHERE add_new_users_blog_ID = '%d' AND add_new_users_site_ID = '%d' AND add_new_users_ID = '%d'", $wpdb->blogid, $wpdb->siteid, $user['add_new_users_ID'] ) );
+				if ( $user_id && ! is_wp_error( $user_id ) ) {
+					if ( is_multisite() ) {
+						add_user_to_blog( $wpdb->blogid, $user_id, $user['add_new_users_user_role'] );
+						wpmu_welcome_user_notification( $user_id, $user['add_new_users_user_password'], '' );
+					} else {
+						if ( isset( $user['add_new_users_user_role'] ) ) {
+							$user_object = new WP_User( $user_id );
+							$user_object->set_role( $user['add_new_users_user_role'] );
+						}
+						wp_new_user_notification( $user_id, $user['add_new_users_user_password'] );
+					}
+
+					$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->base_prefix}add_new_users_queue WHERE add_new_users_blog_ID = '%d' AND add_new_users_site_ID = '%d' AND add_new_users_ID = '%d'", $wpdb->blogid, $wpdb->siteid, $user['add_new_users_ID'] ) );
+				}
 			}
 		}
 	}
@@ -185,6 +199,47 @@ class Add_New_Users {
 			return is_supporter();
 
 		return false;
+	}
+
+	/**
+	 * Validate user login and email
+	 *
+	 **/
+	function validate_user_signup( $user_login, $user_email ) {
+		if ( is_multisite() ) {
+			return wpmu_validate_user_signup( $user_login, $user_email );
+		} else {
+			$errors = new WP_Error();
+
+			$sanitized_user_login = sanitize_user( $user_login );
+			$user_email = apply_filters( 'user_registration_email', $user_email );
+
+			// Check the username
+			if ( $sanitized_user_login == '' ) {
+				$errors->add( 'empty_username', __( '<strong>ERROR</strong>: Please enter a username.' ) );
+			} elseif ( ! validate_username( $user_login ) ) {
+				$errors->add( 'invalid_username', __( '<strong>ERROR</strong>: This username is invalid because it uses illegal characters. Please enter a valid username.' ) );
+				$sanitized_user_login = '';
+			} elseif ( username_exists( $sanitized_user_login ) ) {
+				$errors->add( 'username_exists', __( '<strong>ERROR</strong>: This username is already registered, please choose another one.' ) );
+			}
+
+			// Check the e-mail address
+			if ( $user_email == '' ) {
+				$errors->add( 'empty_email', __( '<strong>ERROR</strong>: Please type your e-mail address.' ) );
+			} elseif ( ! is_email( $user_email ) ) {
+				$errors->add( 'invalid_email', __( '<strong>ERROR</strong>: The email address isn&#8217;t correct.' ) );
+				$user_email = '';
+			} elseif ( email_exists( $user_email ) ) {
+				$errors->add( 'email_exists', __( '<strong>ERROR</strong>: This email is already registered, please choose another one.' ) );
+			}
+
+			do_action( 'register_post', $sanitized_user_login, $user_email, $errors );
+
+			$errors = apply_filters( 'registration_errors', $errors, $sanitized_user_login, $user_email );
+
+			return array( 'user_name' => $sanitized_user_login, 'orig_username' => $user_login, 'user_email' => $user_email, 'errors' => $errors );
+		}
 	}
 
 	/**
@@ -213,8 +268,8 @@ class Add_New_Users {
 				check_admin_referer( 'add-new-users-process_queue_new_users' );
 
 				echo '<p>' . __( 'Adding Users...', 'add_new_users' ) . '</p>';
-				$queue_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}add_new_users_queue WHERE add_new_users_site_ID = '%d' AND add_new_users_blog_ID = '%d'", $wpdb->siteid, $wpdb->blogid ) );
 				$this->queue_process( $wpdb->blogid, $wpdb->siteid );
+				$queue_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}add_new_users_queue WHERE add_new_users_site_ID = '%d' AND add_new_users_blog_ID = '%d'", $wpdb->siteid, $wpdb->blogid ) );
 
 				if ( $queue_count > 0 )
 					echo '<script language=\'javascript\'>window.location=\'users.php?page=add-new-users&action=process_queue\';</script>';
@@ -246,7 +301,7 @@ class Add_New_Users {
 					if ( !empty( $user_email ) || !empty( $user_login ) ) {
 
 						// validate user email and login
-						$validate_user = wpmu_validate_user_signup( $user_login, $user_email );
+						$validate_user = $this->validate_user_signup( $user_login, $user_email );
 						if( is_wp_error( $validate_user_errors = $validate_user[ 'errors' ] ) && !empty( $validate_user[ 'errors' ]->errors ) ) {
 							foreach( $validate_user_errors->get_error_codes() as $error_code ) {
 								$error_field = $error_code;
@@ -272,8 +327,8 @@ class Add_New_Users {
 							$user_password = 'empty';
 						}
 
-						$add_new_users_items[$counter]['user_login'] = $user_login;
-						$add_new_users_items[$counter]['user_email'] = $user_email;
+						$add_new_users_items[$counter]['user_login'] = $validate_user['user_name'];
+						$add_new_users_items[$counter]['user_email'] = $validate_user['user_email'];
 						$add_new_users_items[$counter]['user_password'] = $user_password;
 						$add_new_users_items[$counter]['user_role'] = $user_role;
 
@@ -287,7 +342,7 @@ class Add_New_Users {
 				}
 
 				// if there are errors, display them
-				if( $global_errors > 0 ) {
+				if ( $global_errors > 0 ) {
 
 					echo '<h2>' . __( 'Add New Users', 'add_new_users' ) . '</h2>';
 					echo '<div class="message error"><p>' . __( 'Errors were found. Please fix the errors and hit Next.', 'add_new_users' ) . '</p></div>';
@@ -324,7 +379,7 @@ class Add_New_Users {
 					$queue_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}add_new_users_queue WHERE add_new_users_site_ID = '%d' AND add_new_users_blog_ID = '%d'", $wpdb->siteid, $wpdb->blogid ) );
 
 					if ( $queue_count > 0 )
-						echo '<script language=\'javascript\'>window.location=\'' . wp_nonce_url( 'users.php?page=add-new-users&action=process_queue', 'add-new-users-process_queue_new_users' ) . '\';</script>';
+						echo '<script language=\'javascript\'>window.location=\'' . htmlspecialchars_decode( wp_nonce_url( 'users.php?page=add-new-users&action=process_queue', 'add-new-users-process_queue_new_users' ) ) . '\';</script>';
 					else
 						echo '<script language=\'javascript\'>window.location=\'users.php?page=add-new-users\';</script>';
 
