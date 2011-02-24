@@ -139,7 +139,7 @@ class Add_New_Users {
 	 *
 	 **/
 	function plug_pages() {
-		add_submenu_page( 'users.php', 'Add New Users', 'Add New Users', 'manage_options', 'add-new-users', array( &$this, 'page_output' ) );
+		add_submenu_page( 'users.php', 'Add New Users', 'Add New Users', 'edit_users', 'add-new-users', array( &$this, 'page_output' ) );
 	}
 
 	/**
@@ -272,7 +272,7 @@ class Add_New_Users {
 				$queue_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->base_prefix}add_new_users_queue WHERE add_new_users_site_ID = '%d' AND add_new_users_blog_ID = '%d'", $wpdb->siteid, $wpdb->blogid ) );
 
 				if ( $queue_count > 0 )
-					echo '<script language=\'javascript\'>window.location=\'users.php?page=add-new-users&action=process_queue\';</script>';
+					echo '<script language=\'javascript\'>window.location=\'' . htmlspecialchars_decode( wp_nonce_url( 'users.php?page=add-new-users&action=process_queue', 'add-new-users-process_queue_new_users' ) ) . '\';</script>';
 				else
 					echo '<script language=\'javascript\'>window.location=\'users.php?page=add-new-users&updated=true&updatedmsg=' . urlencode( __( 'Users Added.', 'add_new_users' ) ) . '\';</script>';
 			break;
@@ -389,7 +389,7 @@ class Add_New_Users {
 			default:
 				echo '<h2>' . __( 'Add New Users', 'add_new_users'  ) . '</h2>';
 				echo '<p>' . __( 'This tool allows you to create new users on this site and add them to this blog.', 'add_new_users'  ) . '</p>';
-				echo function_exists( 'add_users_plug_pages' ) ? '<p>' . __( 'To add users that have already been created, please use the <a href="users.php?page=add-users">Add Users functionality here</a>.', 'add_new_users'  ) . '</p>' : '';
+				echo class_exists( 'Add_Users' ) ? '<p>' . __( 'To add users that have already been created, please use the <a href="users.php?page=add-users">Add Users functionality here</a>.', 'add_new_users'  ) . '</p>' : '';
 
 				echo '<p>' . __( 'To add the new users simply enter the username you\'d like to give them (please choose carefully as it cannot be changed), their email address and - should you so choose - a password for them.', 'add_new_users'  ) . '</p>';
 				echo '<p>' . __( 'You may also select the level that you wish them to access to the site - you can find out more about different levels of access <a href="http://help.edublogs.org/2009/08/24/what-are-the-different-roles-of-users/">here</a>.', 'add_new_users'  ) . '</p>';
