@@ -5,6 +5,12 @@ Change Log:
 ----------------------------------------------------------------------
 ----------------------------------------------------------------------
 
+1.0.6 - 02/24/2011
+----------------------------------------------------------------------
+- Bug fix: nonce not defined during queue processing
+- Enhancement: allow admin page access to all users who have edit_users
+capability
+
 1.0.5 - 02/22/2011
 ----------------------------------------------------------------------
 - Enhancement: singlesite support

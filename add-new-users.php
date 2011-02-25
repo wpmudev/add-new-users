@@ -4,7 +4,7 @@ Plugin Name: Add New Users
 Plugin URI: http://premium.wpmudev.org/project/add-new-users
 Description: Allows you to bulk create new users on a site and add them to a blog, including the facility to set their role and password on the new site.
 Author: Andrew Billits, Ulrich Sossou
-Version: 1.0.5
+Version: 1.0.6
 Text Domain: add_new_users
 Author URI: http://premium.wpmudev.org
 WDP ID: 114
@@ -20,7 +20,7 @@ class Add_New_Users {
 	 * Current version number
 	 *
 	 **/
-	var $current_version = '1.0.5';
+	var $current_version = '1.0.6';
 
 	/**
 	 * For supporters only
