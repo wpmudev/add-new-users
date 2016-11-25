@@ -41,14 +41,6 @@ class Add_New_Users {
 	var $fields = '';
 
 	/**
-	 * PHP4 Constructor
-	 *
-	 **/
-	function Add_New_Users() {
-		__construct();
-	}
-
-	/**
 	 * PHP5 Constructor
 	 *
 	 **/
@@ -483,7 +475,7 @@ class Add_New_Users {
 
 }
 
-$add_new_users =& new Add_New_Users;
+$add_new_users = new Add_New_Users;
 
 /**
  * Show notification if WPMUDEV Update Notifications plugin is not installed
