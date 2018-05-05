@@ -108,7 +108,7 @@ class Add_New_Users {
 
 		// choose correct table charset and collation
 		$charset_collate = '';
-		if( $wpdb->supports_collation() ) {
+		if( $wpdb->has_cap( 'collation' ) ) {
 			if( !empty( $wpdb->charset ) ) {
 				$charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
 			}
@@ -282,10 +282,10 @@ class Add_New_Users {
 
 				$batch_ID = md5( $wpdb->blogid . time() . '0420i203zm' );
 				$errors = '';
-				$error_fields = '';
+				$error_fields = array();
 				$error_messages = '';
 				$global_errors = 0;
-				$add_new_users_items = '';
+				$add_new_users_items = array();
 
 				// validate users names, emails and passwords
 				for ( $counter = 1; $counter <= $this->fields; $counter += 1 ) {
