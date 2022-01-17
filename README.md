@@ -24,7 +24,7 @@ Do you need to add existing users in batches of up to 15? Give the[Add Existing 
 
 ## Usage
 
-Start by reading [Installing plugins](https://premium.wpmudev.org/wpmu-manual/installing-regular-plugins-on-wpmu/) section in our [comprehensive WordPress and WordPress Multisite Manual](https://premium.wpmudev.org/wpmu-manual/) if you are new to WordPress.
+Start by reading [Installing plugins](https://wpmudev.com/docs/using-wordpress/installing-wordpress-plugins/) section in our [comprehensive WordPress and WordPress Multisite Manual](https://premium.wpmudev.org/wpmu-manual/) if you are new to WordPress.
 
 ### To install:
 
